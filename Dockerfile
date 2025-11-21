@@ -1,19 +1,25 @@
 FROM debian:12
 
-# Install dependencies for building GCC
+# Install build dependencies
 RUN apt-get update && apt-get install -y \
-    build-essential git autoconf automake bison flex texinfo libgmp-dev libmpfr-dev libmpc-dev
+    build-essential \
+    flex \
+    bison \
+    texinfo \
+    libgmp-dev \
+    libmpfr-dev \
+    libmpc-dev \
+    git \
+  && rm -rf /var/lib/apt/lists/*
 
-# Copy the local GCC source into the image
-COPY gcc /usr/src/gcc
-WORKDIR /usr/src/gcc
+# Copy your GCC source into the container
+COPY gcc-src /gcc-src
+WORKDIR /gcc-src
 
-# Prepare GCC prerequisites
-RUN ./contrib/download_prerequisites
+# # Configure GCC (disable bootstrap, build just once)
+# RUN mkdir build && cd build \
+#     && ../configure --disable-bootstrap --disable-multilib --enable-languages=c,c++ \
+#     && make -j$(nproc) \
+#     && make install
 
-# Configure only C and C++ for now, no multilib
-RUN ./configure --disable-multilib --enable-languages=c,c++
-
-# Build GCC (gcc0 stage)
-RUN make -j$(nproc)
-RUN make install
+CMD ["/bin/bash"]
